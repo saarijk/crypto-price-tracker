@@ -4,7 +4,8 @@ import viteLogo from "/vite.svg";
 import Prices from "./components/Prices";
 
 function App() {
-  const colours = "bg-gradient-to-b from-slate-900 via-slate-700 to-slate-500";
+  const colours =
+    "bg-[radial-gradient(ellipse_at_bottom_left,_var(--tw-gradient-stops))] from-gray-800 via-gray-900 to-black";
 
   return (
     <div className={`${colours} h-full w-full px-10 py-10`}>
