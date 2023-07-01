@@ -1,35 +1,22 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { useState } from "react";
+import reactLogo from "./assets/react.svg";
+import viteLogo from "/vite.svg";
+import Prices from "./components/Prices";
 
 function App() {
-  const [count, setCount] = useState(0)
+  const colours = "bg-gradient-to-b from-slate-900 via-slate-700 to-slate-500";
 
   return (
-    <>
-      <div>
-        <a href="https://vitejs.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
+    <div className={`${colours} h-full w-full px-10 py-10`}>
+      <div className="h-[200px] w-[410px] flex-col items-center rounded-3xl bg-black bg-opacity-20">
+        <h1 className="p-5 text-8xl">CPT</h1>
+        <h2 className="mt-[-40px] p-5 text-4xl text-gray-700">
+          Crypto Price Tracker
+        </h2>
       </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+      <Prices />
+    </div>
+  );
 }
 
-export default App
+export default App;
