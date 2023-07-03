@@ -9,6 +9,8 @@ export default function Prices() {
     after: [],
   });
   const cryptoUrl = "https://cryptopriceapi.azurewebsites.net/CryptoPrices";
+  const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  let s = new Date().toLocaleString();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -44,11 +46,22 @@ export default function Prices() {
           visible: { opacity: 1, x: 0 },
         }}
       >
-        Prices
+        Prices ({s}, {timezone})
+        <div className="mt-3 flex h-[50px] w-full items-center justify-between text-lg">
+          <h3>Currency</h3>
+          <h3 className="text-center">
+            Current <br />
+            price
+          </h3>
+          <h3>Difference</h3>
+        </div>
       </motion.h1>
 
       {currentPrices.after.map((currentCrypto, index) => {
         const beforeCrypto = currentPrices.before[index];
+        let currentP: number = parseFloat(currentCrypto.price);
+        let beforeP: number = parseFloat(beforeCrypto.price);
+        let difference: number = currentP - beforeP;
         return (
           <motion.div
             key={currentCrypto.name}
@@ -65,9 +78,17 @@ export default function Prices() {
               className="flex h-[50px] w-full items-center justify-between px-5"
               whileHover={{ scale: 1.01 }}
             >
-              <h3>{currentCrypto.name.toUpperCase()}</h3>
-              <h3>{currentCrypto.price}</h3>
-              <h3>{beforeCrypto ? beforeCrypto.price : "-"}</h3>
+              <h3 className="w-[80px] text-left">
+                {currentCrypto.name.toUpperCase()}
+              </h3>
+              <h3 className="w-[80px] text-left">{currentCrypto.price}</h3>
+              {/*<h3>{beforeCrypto ? beforeCrypto.price : "-"}</h3> */}
+
+              {difference === 0 ? (
+                <h3 className="w-[80px] text-right">-</h3>
+              ) : (
+                <h3>{beforeCrypto ? difference.toFixed(5) : "-"}</h3>
+              )}
             </motion.div>
           </motion.div>
         );
