@@ -26,7 +26,9 @@ function App() {
           Crypto Price Tracker
         </h2>
       </motion.div>
-      <Prices />
+      <div className="inline-flex w-full">
+        <Prices />
+      </div>
     </div>
   );
 }
