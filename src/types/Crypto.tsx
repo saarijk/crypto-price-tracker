@@ -15,3 +15,9 @@ export interface DescriptionInfo {
   description: string;
   name: string;
 }
+
+export interface PriceAlert {
+  name: string;
+  amount: string;
+  priceMet: boolean;
+}
