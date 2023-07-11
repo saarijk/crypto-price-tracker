@@ -4,11 +4,12 @@ export interface Crypto {
   category: string;
   description: string;
   tokenImage: string;
+  hasAlert: boolean;
 }
 
 export interface AllPrices {
-  before: Crypto[];
-  after: Crypto[];
+  newPrice: Crypto[];
+  beforePrice: Crypto[];
 }
 
 export interface DescriptionInfo {
@@ -17,7 +18,6 @@ export interface DescriptionInfo {
 }
 
 export interface PriceAlert {
-  name: string;
-  amount: string;
-  priceMet: boolean;
+  alertName: string;
+  alertAmount: number;
 }

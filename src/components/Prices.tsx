@@ -12,12 +12,27 @@ import { InformationCircleIcon } from "@heroicons/react/24/outline";
 
 export default function Prices() {
   const [currentPrices, setCurrentPrices] = useState<AllPrices>({
-    before: [],
-    after: [],
+    newPrice: [],
+    beforePrice: [],
   });
   const cryptoUrl = "https://cryptopriceapi.azurewebsites.net/CryptoPrices";
   const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-  let s = new Date().toLocaleString();
+  let currentDate = new Date().toLocaleString();
+
+  const [description, setDescription] = useState<DescriptionInfo>();
+  const [showDescription, setShowDescription] = useState<boolean>(false);
+
+  const [isPriceAlertToggled, setIsPriceAlertToggled] =
+    useState<boolean>(false);
+  const [nameofCurrency, setNameOfCurrency] = useState<string>("");
+  const [isInvalidInput, setIsInvalidInput] = useState<boolean>();
+  const [overwriteConfirmation, setOverwriteConfirmation] =
+    useState<boolean>(false);
+
+  const [alerts, setAlerts] = useState<PriceAlert[]>([]);
+  const [alertName, setAlertName] = useState<string>("");
+  const [alertPrice, setAlertPrice] = useState<string>("");
+  const [isAlert, setIsAlert] = useState<boolean>(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -25,9 +40,10 @@ export default function Prices() {
         const response = await axios.get<Crypto[]>(cryptoUrl);
         console.log(response.data);
         setCurrentPrices((prevPrices) => ({
-          before: response.data,
-          after: prevPrices.before,
+          newPrice: response.data,
+          beforePrice: prevPrices.newPrice,
         }));
+        alerts.forEach((alert) => {});
       } catch (error) {
         console.error(error);
       }
@@ -42,16 +58,47 @@ export default function Prices() {
     };
   }, []);
 
-  const [description, setDescription] = useState<DescriptionInfo>();
-  const [showDescription, setShowDescription] = useState<boolean>(false);
+  function addNewPriceAlert(name: string, amount: number) {
+    // check for legitimate data
+    // check for duplicates
+    const existingAlert = alerts.find((alert) => alert.alertName === name);
+    if (existingAlert) {
+      // a duplicate exists
+      console.log("Alert found! Overwriting existing entry.");
+      existingAlert.alertAmount = amount;
+    } else {
+      // add to array
+      alerts.push({ alertName: name, alertAmount: amount });
+    }
+    console.log(alerts);
+  }
 
-  const [priceAlert, setPriceAlert] = useState<PriceAlert[]>();
-  const [isPriceAlertToggled, setIsPriceAlertToggled] =
-    useState<boolean>(false);
-  const [nameofCurrency, setNameOfCurrency] = useState<string>("");
-  const [isInvalidInput, setIsInvalidInput] = useState<boolean>();
-  const [overwriteConfirmation, setOverwriteConfirmation] =
-    useState<boolean>(false);
+  function calculateDifference(after: number, before: number): number {
+    let diff = after - before;
+    return diff;
+  }
+
+  function checkPriceAlerts(crypto: Crypto): Crypto {
+    // compare name of the currency against the array, see if the same name exists
+    for (let i = 0; i < alerts.length; i++) {
+      if (crypto.name.toUpperCase() === alerts[i].alertName.toUpperCase()) {
+        crypto.hasAlert = true;
+        return crypto;
+      }
+    }
+    return crypto;
+  }
+
+  function findAlertPrice(name: string, array: PriceAlert[]): number {
+    let amount = 0;
+    for (let i = 0; i < array.length; i++) {
+      if (name.toUpperCase() === array[i].alertName.toUpperCase()) {
+        amount = array[i].alertAmount;
+        return amount;
+      }
+    }
+    return amount;
+  }
 
   return (
     <div className="inline-flex w-full">
@@ -67,7 +114,7 @@ export default function Prices() {
             visible: { opacity: 1, x: 0 },
           }}
         >
-          Prices ({s}, {timezone})
+          Prices ({currentDate}, {timezone})
           <div className="mt-3 flex h-[25px] w-full grid-cols-5 items-center justify-between text-lg duration-500">
             <h3>Currency</h3>
             <h3>Info</h3>
@@ -77,12 +124,16 @@ export default function Prices() {
           </div>
         </motion.h1>
 
-        {currentPrices.after.map((currentCrypto, index) => {
-          const beforeCrypto = currentPrices.before[index];
-          let currentP: number = parseFloat(currentCrypto.price);
-          let beforeP: number = parseFloat(beforeCrypto.price);
-          let difference: number = currentP - beforeP;
+        {currentPrices.beforePrice.map((currentCrypto, index) => {
+          let cryptoInfo = currentPrices.newPrice[index];
+          const difference = calculateDifference(
+            parseFloat(cryptoInfo.price),
+            parseFloat(currentCrypto.price)
+          );
           let isLarger = difference > 0;
+          const ping = "animate-ping";
+          cryptoInfo = checkPriceAlerts(cryptoInfo);
+          let alertAmount = findAlertPrice(cryptoInfo.name, alerts);
           return (
             <motion.div
               key={currentCrypto.name}
@@ -102,7 +153,7 @@ export default function Prices() {
                 <h3 className="inline-flex w-[80px] text-left">
                   <img
                     className="mr-2 h-6 w-6"
-                    src={beforeCrypto.tokenImage}
+                    src={cryptoInfo.tokenImage}
                   ></img>
                   {currentCrypto.name.toUpperCase()}
                 </h3>
@@ -110,30 +161,30 @@ export default function Prices() {
                   className="ml-2 cursor-pointer rounded-full text-left"
                   onClick={() => {
                     setDescription({
-                      description: beforeCrypto.description,
-                      name: beforeCrypto.name,
+                      description: cryptoInfo.description,
+                      name: cryptoInfo.name,
                     });
                     setShowDescription(!showDescription);
                   }}
                 >
                   <InformationCircleIcon className="h6 w-6 text-slate-500 hover:text-white" />
                 </button>
-                <h3 className="w-1/5 text-right">{currentCrypto.price}</h3>
+                <h3 className="w-1/5 text-right">{cryptoInfo.price}</h3>
                 {/*<h3>{beforeCrypto ? beforeCrypto.price : "-"}</h3> */}
 
                 {difference === 0 ? (
-                  <h3 className="w-1/5 text-right text-lg text-white">
-                    {difference.toPrecision(5)}
+                  <h3 className="text-md w-1/5 text-right text-white">
+                    {difference.toFixed(5)}
                   </h3>
                 ) : isLarger ? (
-                  <h3 className="w-1/5 text-right text-green-400">
-                    {beforeCrypto && beforeCrypto.price
+                  <h3 className="text-md w-1/5 text-right text-green-400">
+                    {cryptoInfo && cryptoInfo.price
                       ? difference.toFixed(5)
                       : "-"}
                   </h3>
                 ) : (
-                  <h3 className="w-1/5 text-right text-red-400">
-                    {beforeCrypto && beforeCrypto.price
+                  <h3 className="text-md w-1/5 text-right text-red-400">
+                    {cryptoInfo && cryptoInfo.price
                       ? difference.toFixed(5)
                       : "-"}
                   </h3>
@@ -144,10 +195,20 @@ export default function Prices() {
                   onClick={() => {
                     setIsPriceAlertToggled(!isPriceAlertToggled);
                     setShowDescription(false);
-                    setNameOfCurrency(beforeCrypto.name);
+                    setNameOfCurrency(cryptoInfo.name);
                   }}
                 >
-                  <BoltIcon className="h6 w-6 text-gray-500 hover:text-white" />
+                  {cryptoInfo.hasAlert ? (
+                    <BoltIcon
+                      className={`h6 w-6 text-yellow-500 hover:text-yellow-400 ${
+                        alertAmount <= parseFloat(cryptoInfo.price)
+                          ? `${ping}`
+                          : ""
+                      }`}
+                    />
+                  ) : (
+                    <BoltIcon className="h6 w-6 text-gray-500 hover:text-white" />
+                  )}
                 </button>
               </motion.div>
             </motion.div>
@@ -183,49 +244,10 @@ export default function Prices() {
                   document.getElementById("pricealert") as HTMLInputElement
                 )?.value;
 
-                if (/^\d+(\.\d+)?$/.test(userInput)) {
-                  const newPriceAlert: PriceAlert = {
-                    name: nameofCurrency.toUpperCase(),
-                    amount: userInput,
-                    priceMet: false,
-                  };
-                  console.log(priceAlert);
-
-                  // Check for duplicate price alert entries for the same nameofCurrency
-                  const existingIndex = priceAlert?.findIndex(
-                    (alert) => alert.name === newPriceAlert.name
-                  );
-
-                  if (existingIndex !== undefined && existingIndex !== -1) {
-                    const shouldOverwrite = window.confirm(
-                      "A price alert for this currency already exists. Do you want to overwrite it?"
-                    );
-
-                    if (shouldOverwrite) {
-                      // Overwrite the existing price alert
-                      setPriceAlert((prevPriceAlert = []) =>
-                        prevPriceAlert.map((alert, index) =>
-                          index === existingIndex ? newPriceAlert : alert
-                        )
-                      );
-                      setIsInvalidInput(false); // Reset the invalid input state
-                      setIsPriceAlertToggled(false);
-                    } else {
-                      console.log("Price alert not overwritten.");
-                      setIsPriceAlertToggled(false);
-                    }
-                  } else {
-                    setPriceAlert((prevPriceAlert = []) => [
-                      ...prevPriceAlert,
-                      newPriceAlert,
-                    ]);
-                    setIsInvalidInput(false); // Reset the invalid input state
-                  }
-                  console.log(priceAlert);
-                } else {
-                  console.log("Invalid input. Please enter a number.");
-                  setIsInvalidInput(true); // Set the invalid input state
-                }
+                addNewPriceAlert(
+                  nameofCurrency.toUpperCase(),
+                  parseFloat(userInput)
+                );
               }}
             >
               SAVE
