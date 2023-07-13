@@ -15,7 +15,7 @@ export default function Prices() {
     newPrice: [],
     beforePrice: [],
   });
-  const cryptoUrl = "https://cryptopriceapi.azurewebsites.net/CryptoPrices";
+  const cryptoUrl = "https://akportfolioapi.azurewebsites.net/CryptoPrices";
   const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
   let currentDate = new Date().toLocaleString();
 
@@ -29,7 +29,7 @@ export default function Prices() {
   const [overwriteConfirmation, setOverwriteConfirmation] =
     useState<boolean>(false);
 
-  const [alerts, setAlerts] = useState<PriceAlert[]>([]);
+  let [alerts, setAlerts] = useState<PriceAlert[]>([]);
   const [alertName, setAlertName] = useState<string>("");
   const [alertPrice, setAlertPrice] = useState<string>("");
   const [isAlert, setIsAlert] = useState<boolean>(false);
@@ -98,6 +98,28 @@ export default function Prices() {
       }
     }
     return amount;
+  }
+
+  function deleteAlertPrice(
+    name: string,
+    alertsArray: PriceAlert[]
+  ): PriceAlert[] {
+    let index = -1;
+    console.log("alerts before: " + alertsArray);
+    // find the index of the price alert with the matching name
+    for (let i = 0; i < alertsArray.length; i++) {
+      if (name === alertsArray[i].alertName) {
+        index = i;
+        break; // exit the loop once a match is found
+      }
+    }
+
+    if (index !== -1) {
+      alertsArray.splice(index, 1); // remove the element at the found index
+    }
+
+    console.log("alerts after: " + alertsArray);
+    return alertsArray;
   }
 
   return (
@@ -252,12 +274,16 @@ export default function Prices() {
             >
               SAVE
             </button>
-
-            {overwriteConfirmation && (
-              <p className="mt-2 text-red-500">
-                Overwriting the existing price alert...
-              </p>
-            )}
+            {/* check if there exists an entry for this currency to show this button */}
+            <button
+              className="ml-3 rounded bg-blue-600 px-4 py-2 font-bold text-white hover:bg-blue-500"
+              onClick={() => {
+                alerts = deleteAlertPrice(nameofCurrency.toUpperCase(), alerts);
+                setIsPriceAlertToggled(!isPriceAlertToggled);
+              }}
+            >
+              DEL
+            </button>
           </div>
         </div>
       )}
